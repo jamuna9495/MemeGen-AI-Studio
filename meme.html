@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meme Studio Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8a2be2;
+            --secondary: #00f2fe;
+            --bg-dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, var(--bg-dark));
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Bubbles */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: var(--primary);
+            filter: blur(150px);
+            border-radius: 50%;
+            z-index: -1;
+            top: 10%;
+            left: 10%;
+            opacity: 0.4;
+        }
+
+        .main-container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; }
+        }
+
+        .editor-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            font-weight: 600;
+            background: linear-gradient(to right, #fff, var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label { font-size: 0.9rem; color: #cbd5e1; }
+
+        input[type="text"], input[type="file"] {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #475569;
+            padding: 12px;
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(138, 43, 226, 0.4);
+        }
+
+        .preview-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            border: 2px dashed #475569;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .empty-state {
+            color: #94a3b8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="editor-section">
+            <h1>MemeAI Studio</h1>
+            <p style="color: #94a3b8;">Create grand memes instantly.</p>
+            
+            <div class="input-group">
+                <label>Upload Base Image</label>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+
+            <div class="input-group">
+                <label>Top Text</label>
+                <input type="text" id="topText" placeholder="Enter top text...">
+            </div>
+
+            <div class="input-group">
+                <label>Bottom Text</label>
+                <input type="text" id="bottomText" placeholder="Enter bottom text...">
+            </div>
+
+            <button class="btn-download" id="downloadBtn">Download HD Meme</button>
+        </div>
+
+        <div class="preview-section" id="previewArea">
+            <div class="empty-state" id="emptyMsg">
+                <p>📸 Image-ah select panni start pannunga!</p>
+            </div>
+            <canvas id="memeCanvas" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const topTextInput = document.getElementById('topText');
+        const bottomTextInput = document.getElementById('bottomText');
+        const canvas = document.getElementById('memeCanvas');
+        const ctx = canvas.getContext('2d');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const emptyMsg = document.getElementById('emptyMsg');
+
+        let activeImage;
+
+        imageInput.addEventListener('change', (e) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const img = new Image();
+                img.onload = () => {
+                    activeImage = img;
+                    emptyMsg.style.display = 'none';
+                    canvas.style.display = 'block';
+                    updateMeme();
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        function updateMeme() {
+            if (!activeImage) return;
+
+            canvas.width = activeImage.width;
+            canvas.height = activeImage.height;
+
+            // Draw Image
+            ctx.drawImage(activeImage, 0, 0);
+
+            // Grand Text Settings
+            const fontSize = canvas.width / 10;
+            ctx.font = `bold ${fontSize}px Impact`;
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = fontSize / 12;
+            ctx.textAlign = 'center';
+
+            // Top Text
+            ctx.textBaseline = 'top';
+            drawStyledText(topTextInput.value.toUpperCase(), canvas.width / 2, 20);
+
+            // Bottom Text
+            ctx.textBaseline = 'bottom';
+            drawStyledText(bottomTextInput.value.toUpperCase(), canvas.width / 2, canvas.height - 20);
+        }
+
+        function drawStyledText(text, x, y) {
+            ctx.strokeText(text, x, y);
+            ctx.fillText(text, x, y);
+        }
+
+        [topTextInput, bottomTextInput].forEach(input => {
+            input.addEventListener('input', updateMeme);
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if(!activeImage) return alert("First oru image upload pannunga!");
+            const link = document.createElement('a');
+            link.download = 'Grand_AI_Meme.png';
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        });
+    </script>
+</body>
+</html>
