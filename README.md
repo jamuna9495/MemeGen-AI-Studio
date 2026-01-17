@@ -30,4 +30,4 @@ A high-performance, desktop-based Meme Generation tool built with **Java Swing**
 ### Installation & Run
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/your-username/MemeGen-AI-Studio.git](https://github.com/your-username/MemeGen-AI-Studio.git)
+   git clone [https://github.com/your-username/MemeGen-AI-Studio.git](https://github.com/jamuna9495/MemeGen-AI-Studio.git)
